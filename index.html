@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Карточки для изучения слов</title>
+<meta name="description" content="Карточки для изучения слов с облачной синхронизацией">
+<meta name="theme-color" content="#12141c">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Карточки">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2333407a'/%3E%3Cstop offset='1' stop-color='%23222b55'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Ctext x='32' y='43' font-size='28' font-weight='700' text-anchor='middle' fill='white' font-family='Arial,sans-serif'%3EAa%3C/text%3E%3C/svg%3E">
+
+<style>
+  /* ------------------------------------------------------------------
+     Базовые стили и тема (перенесены из QSS оригинала)
+     ------------------------------------------------------------------ */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  [hidden] { display: none !important; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #12141c;
+    color: #e8eaf2;
+    font-family: 'Segoe UI', system-ui, -apple-system, 'SF Pro Text', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { min-height: 100dvh; overscroll-behavior-y: none; }
+
+  .screen {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding:
+      calc(28px + env(safe-area-inset-top))
+      calc(32px + env(safe-area-inset-right))
+      calc(24px + env(safe-area-inset-bottom))
+      calc(32px + env(safe-area-inset-left));
+  }
+
+  .muted { color: #8b90a5; }
+  .center { text-align: center; }
+
+  h1.title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  /* ---------- Кнопки ---------- */
+  button {
+    font: inherit;
+    color: inherit;
+    border: 0;
+    cursor: pointer;
+    background: #262b3d;
+    border-radius: 10px;
+    padding: 10px 18px;
+    touch-action: manipulation;
+    transition: background .15s ease, transform .06s ease, opacity .15s ease;
+  }
+  button:active { background: #394062; transform: scale(.98); }
+  button:focus-visible { outline: 2px solid #6c8cff; outline-offset: 2px; }
+  button.sm { padding: 8px 14px; font-size: 13px; }
+
+  button.primary { background: #6c8cff; color: #0e1020; font-weight: 600; }
+  button.primary:active { background: #5a79e6; }
+  button.danger { background: #3a2230; color: #ff8a9b; }
+  button.danger:active { background: #4d2a3c; }
+  button.flat { background: transparent; color: #a9aec6; }
+  button.flat:active { background: #232838; }
+  button.success {
+    background: #1f3a2e; color: #6ee7a8; font-weight: 600;
+    padding: 14px 26px; font-size: 15px;
+  }
+  button.success:active { background: #27503d; }
+  button.fail {
+    background: #3a2230; color: #ff8a9b; font-weight: 600;
+    padding: 14px 26px; font-size: 15px;
+  }
+  button.fail:active { background: #4d2a3c; }
+
+  @media (hover: hover) {
+    button:hover { background: #2f3550; }
+    button.primary:hover { background: #829cff; }
+    button.danger:hover { background: #4d2a3c; }
+    button.flat:hover { background: #232838; }
+    button.success:hover { background: #27503d; }
+    button.fail:hover { background: #4d2a3c; }
+  }
+
+  button:disabled, button:disabled:hover, button:disabled:active {
+    color: #5a5f75;
+    background: #1e2231;
+    cursor: not-allowed;
+    transform: none;
+  }
+  button.flat:disabled, button.flat:disabled:hover { background: transparent; }
+
+  /* ---------- Поля ввода ---------- */
+  input[type="text"] {
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    background: #232838;
+    border: 1px solid #2f3550;
+    border-radius: 10px;
+    padding: 10px 12px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input[type="text"]::placeholder { color: #6d728a; }
+  input[type="text"]:focus { border-color: #6c8cff; }
+  input[type="text"].invalid { border-color: #ff8a9b; }
+
+  /* ---------- Чекбоксы ---------- */
+  label.check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  label.check input {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1px solid #3a4165;
+    background: #232838;
+    position: relative;
+    cursor: pointer;
+    flex: none;
+  }
+  label.check input:checked { background: #6c8cff; border-color: #6c8cff; }
+  label.check input:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px; top: 1px;
+    width: 5px; height: 10px;
+    border: solid #0e1020;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  label.check input:focus-visible { outline: 2px solid #6c8cff; outline-offset: 2px; }
+
+  /* ---------- Панели ---------- */
+  .panel {
+    background: #1b1f2c;
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  /* ------------------------------------------------------------------
+     Главный экран
+     ------------------------------------------------------------------ */
+  .head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .head-right { display: flex; align-items: center; gap: 6px; flex: none; }
+
+  .sync {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: #8b90a5;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #1b1f2c;
+  }
+  .sync i {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #5a5f75;
+    display: block;
+  }
+  .sync.ok i { background: #6ee7a8; }
+  .sync.busy i { background: #6c8cff; animation: pulse 1s ease-in-out infinite; }
+  .sync.err i { background: #ff8a9b; }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  .banner { border: 1px solid #3a2230; color: #ffb3bf; background: #241a24; line-height: 1.5; }
+  .banner code {
+    background: #12141c; padding: 1px 6px; border-radius: 6px; color: #e8eaf2;
+  }
+
+  .add-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+  }
+
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .list {
+    background: #1b1f2c;
+    border-radius: 14px;
+    padding: 6px;
+    min-height: 200px;
+    scrollbar-width: thin;
+    scrollbar-color: #363c58 transparent;
+  }
+  .list::-webkit-scrollbar { width: 10px; }
+  .list::-webkit-scrollbar-track { background: transparent; }
+  .list::-webkit-scrollbar-thumb { background: #363c58; border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+  .list::-webkit-scrollbar-thumb:hover { background: #4a5275; background-clip: content-box; }
+
+  .list-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 188px;
+    padding: 20px;
+    color: #8b90a5;
+    white-space: pre-line;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin: 2px 0;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  @media (hover: hover) { .row:hover { background: #232838; } }
+  .row.selected, .row.selected:hover { background: #2c3560; color: #fff; }
+  .row .box {
+    flex: 0 0 18px;
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    border: 1px solid #3a4165;
+    background: #232838;
+    position: relative;
+  }
+  .row.selected .box { background: #6c8cff; border-color: #6c8cff; }
+  .row.selected .box::after {
+    content: '';
+    position: absolute;
+    left: 5px; top: 1px;
+    width: 5px; height: 10px;
+    border: solid #0e1020;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .row-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .row .sep { color: #8b90a5; margin: 0 .7em; }
+  .row.known .row-text { color: #6ee7a8; }
+  .row.known .sep { color: rgba(110, 231, 168, .55); }
+  .row .edit-btn {
+    flex: none;
+    background: transparent;
+    color: #8b90a5;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1;
+  }
+  @media (hover: hover) { .row .edit-btn:hover { background: #2f3550; color: #e8eaf2; } }
+
+  .bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+  }
+  .bottombar .toggles { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+
+  /* Десктоп: список прокручивается внутри, нижняя панель всегда видна */
+  @media (min-width: 760px) {
+    #home { height: 100dvh; min-height: 0; }
+    #home .list { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  }
+
+  /* ------------------------------------------------------------------
+     Экран обучения
+     ------------------------------------------------------------------ */
+  #study { padding-top: calc(20px + env(safe-area-inset-top)); gap: 12px; }
+
+  .study-top {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pbar {
+    background: #232838;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    flex: none;
+  }
+  .pfill {
+    height: 100%;
+    width: 0;
+    background: #6c8cff;
+    border-radius: 3px;
+    transition: width .3s ease;
+  }
+
+  .study-body { flex: 1 1 auto; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+
+  .card-area { flex: 1 1 auto; display: flex; min-height: 260px; padding: 8px 0; }
+
+  .flip-scene {
+    position: relative;
+    flex: 1 1 auto;
+    max-width: 780px;
+    max-height: 560px;
+    margin: 0 auto;
+    perspective: 1400px;
+    -webkit-perspective: 1400px;
+    cursor: pointer;
+    touch-action: manipulation;
+    animation: cardIn .28s ease both;
+  }
+  @keyframes cardIn {
+    from { opacity: .35; transform: translateY(8px) scale(.98); }
+    to   { opacity: 1;   transform: none; }
+  }
+
+  .flip-card {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transition: transform .6s cubic-bezier(.4, .2, .2, 1);
+    will-change: transform;
+  }
+  .flip-card.flipped { transform: rotateY(180deg); }
+  .flip-card.no-anim { transition: none; }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 28px;
+    border: 1.5px solid rgba(255, 255, 255, .13);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, .45);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+  }
+  .face.front { background: linear-gradient(135deg, #33407a, #222b55); }
+  .face.back  { background: linear-gradient(135deg, #2f6a6f, #1f4650); transform: rotateY(180deg); }
+
+  .face-label {
+    position: absolute;
+    top: 18px; left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, .55);
+  }
+  .face-text {
+    position: absolute;
+    top: 60px; bottom: 56px; left: 40px; right: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #fff;
+    overflow: hidden;
+  }
+  .face-text span { display: block; max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
+  .face-hint {
+    position: absolute;
+    bottom: 20px; left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255, 255, 255, .35);
+  }
+
+  .study-hint { color: #6d728a; font-size: 12px; text-align: center; }
+
+  .answer-row {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 12px;
+  }
+  .answer-row .flip-btn { min-height: 48px; }
+
+  /* Экран результатов */
+  .result {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .result h2 { margin: 0; font-size: 34px; font-weight: 700; line-height: 1.2; }
+  .result .sub { color: #8b90a5; font-size: 16px; margin: 0 0 14px; }
+  .result .btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+
+  /* ------------------------------------------------------------------
+     Модальное окно и уведомления
+     ------------------------------------------------------------------ */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(8, 9, 14, .72);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+  .modal {
+    width: min(440px, 100%);
+    background: #1b1f2c;
+    border: 1px solid #2a3047;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .55);
+  }
+  .modal h3 { margin: 0 0 10px; font-size: 18px; }
+  .modal-text { margin: 0 0 14px; color: #c3c7da; overflow-wrap: anywhere; }
+  .modal .field { display: block; margin-bottom: 12px; }
+  .modal .field-label { display: block; margin-bottom: 6px; color: #8b90a5; font-size: 13px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+
+  #toasts {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    padding: 0 16px;
+  }
+  .toast {
+    max-width: 520px;
+    background: #232838;
+    border: 1px solid #2f3550;
+    color: #e8eaf2;
+    padding: 10px 16px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .45);
+    animation: toastIn .2s ease both;
+  }
+  .toast.ok { color: #6ee7a8; border-color: #27503d; }
+  .toast.error { color: #ff8a9b; border-color: #4d2a3c; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ------------------------------------------------------------------
+     Адаптив (телефоны)
+     ------------------------------------------------------------------ */
+  @media (max-width: 759px) {
+    .screen {
+      gap: 14px;
+      padding:
+        calc(18px + env(safe-area-inset-top))
+        calc(16px + env(safe-area-inset-right))
+        calc(16px + env(safe-area-inset-bottom))
+        calc(16px + env(safe-area-inset-left));
+    }
+    h1.title { font-size: 24px; }
+    input[type="text"] { font-size: 16px; }
+    .add-form { grid-template-columns: 1fr; }
+    .add-form button { padding: 12px 18px; }
+
+    .bottombar {
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
+      margin: 0 -16px calc(-16px - env(safe-area-inset-bottom));
+      padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, #12141c 78%, rgba(18, 20, 28, 0));
+      justify-content: space-between;
+    }
+    .bottombar .toggles { flex: 1 1 100%; justify-content: space-between; gap: 12px; }
+    .bottombar .primary { flex: 1 1 100%; padding: 14px 18px; font-size: 15px; }
+
+    #study { padding-top: calc(14px + env(safe-area-inset-top)); }
+    .study-top .muted { font-size: 12px; }
+    .card-area { min-height: 240px; }
+    .face { border-radius: 24px; }
+    .face-text { top: 52px; bottom: 48px; left: 22px; right: 22px; }
+    .face-label { top: 16px; font-size: 11px; }
+    .face-hint { bottom: 16px; }
+
+    .answer-row button { flex: 1 1 0; padding-left: 10px; padding-right: 10px; }
+    .answer-row button.success, .answer-row button.fail { padding: 14px 8px; }
+    .result h2 { font-size: 28px; }
+    .result .btns button { flex: 1 1 100%; }
+  }
+
+  @media (hover: none) { .kbd-hint { display: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flip-card { transition-duration: .01s; }
+    .flip-scene { animation: none; }
+    .pfill { transition: none; }
+  }
+</style>
+
+<!-- Клиент Supabase (CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+<noscript>Для работы приложения нужен включённый JavaScript.</noscript>
+
+<!-- ====================== ГЛАВНЫЙ ЭКРАН ====================== -->
+<main id="home" class="screen">
+  <header class="head">
+    <div>
+      <h1 class="title">Мои карточки</h1>
+      <div class="muted" id="stats">Всего: 0 · Выучено: 0 · Осталось: 0</div>
+    </div>
+    <div class="head-right">
+      <span class="sync" id="sync"><i></i><span id="syncText">Не подключено</span></span>
+      <button class="flat sm" id="btnRefresh" type="button" title="Обновить с сервера" aria-label="Обновить с сервера">↻</button>
+    </div>
+  </header>
+
+  <div class="panel banner" id="configBanner" hidden>
+    Supabase не настроен. Откройте <code>index.html</code> и подставьте свои значения
+    <code>SUPABASE_URL</code> и <code>SUPABASE_KEY</code> в начале тега <code>&lt;script&gt;</code>.
+  </div>
+
+  <div class="panel add-form">
+    <input type="text" id="inWord" placeholder="Слово / Фраза" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="500" enterkeyhint="next">
+    <input type="text" id="inTrans" placeholder="Перевод / Значение" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="500" enterkeyhint="done">
+    <button class="primary" id="btnAdd" type="button">Добавить</button>
+  </div>
+
+  <input type="text" id="search" placeholder="Поиск по карточкам…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+
+  <div class="toolbar">
+    <button class="sm" id="btnSelectAll" type="button">Выбрать все</button>
+    <button class="sm danger" id="btnDeleteSel" type="button">Удалить выбранные</button>
+    <button class="sm danger" id="btnDeleteUnknown" type="button">Удалить невыученные</button>
+    <button class="sm flat" id="btnReset" type="button">Сбросить прогресс</button>
+  </div>
+
+  <div class="list" id="list" role="listbox" aria-multiselectable="true" aria-label="Список карточек"></div>
+
+  <div class="bottombar">
+    <div class="toggles">
+      <label class="check"><input type="checkbox" id="chkShuffle" checked> Перемешать</label>
+      <label class="check"><input type="checkbox" id="chkUnknown"> Только невыученные</label>
+    </div>
+    <button class="primary" id="btnStart" type="button">▶&nbsp; Начать обучение</button>
+  </div>
+</main>
+
+<!-- ====================== ЭКРАН ОБУЧЕНИЯ ====================== -->
+<section id="study" class="screen" hidden>
+  <div class="study-top">
+    <button class="flat" id="btnBack" type="button">←&nbsp; Назад</button>
+    <div class="muted center" id="progressLabel"></div>
+    <button class="flat" id="btnShuffle" type="button">⇄&nbsp; Перемешать</button>
+  </div>
+  <div class="pbar"><div class="pfill" id="pfill"></div></div>
+
+  <div class="study-body" id="cardView">
+    <div class="card-area">
+      <div class="flip-scene" id="flipScene" role="button" aria-label="Карточка. Нажмите, чтобы перевернуть">
+        <div class="flip-card" id="flipCard">
+          <div class="face front">
+            <div class="face-label">СЛОВО / ФРАЗА</div>
+            <div class="face-text" id="frontText"><span></span></div>
+            <div class="face-hint">нажмите, чтобы перевернуть</div>
+          </div>
+          <div class="face back">
+            <div class="face-label">ПЕРЕВОД / ЗНАЧЕНИЕ</div>
+            <div class="face-text" id="backText"><span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="study-hint kbd-hint">Клик или Пробел — перевернуть &nbsp;·&nbsp; ← Не знаю &nbsp;·&nbsp; → Знаю &nbsp;·&nbsp; S — перемешать &nbsp;·&nbsp; Esc — выход</div>
+
+    <div class="answer-row">
+      <button class="fail" id="btnUnknown" type="button">✗&nbsp; Не знаю</button>
+      <button class="flip-btn" id="btnFlip" type="button">Перевернуть</button>
+      <button class="success" id="btnKnown" type="button">✓&nbsp; Знаю</button>
+    </div>
+  </div>
+
+  <div class="study-body result" id="resultView" hidden>
+    <h2 id="resultTitle"></h2>
+    <p class="sub" id="resultSub"></p>
+    <div class="btns">
+      <button id="btnHome" type="button">На главную</button>
+      <button id="btnAgain" type="button">Повторить все</button>
+      <button class="primary" id="btnAgainUnknown" type="button">Повторить «Не знаю»</button>
+    </div>
+  </div>
+</section>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+  /* ====================================================================
+     НАСТРОЙКА SUPABASE
+     Подставьте свои значения (Supabase → Project Settings → API):
+       SUPABASE_URL — адрес проекта, например https://abcdefgh.supabase.co
+       SUPABASE_KEY — публичный ключ anon / publishable (НЕ service_role!)
+     ==================================================================== */
+  const SUPABASE_URL = 'https://rtgpqydlsysdrccvixdp.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_w9O2QsIopWbVyAP1Vsx3wQ_vi1x4vM2';
+
+  (function () {
+    'use strict';
+
+    /* ------------------------------------------------------------------
+       Инициализация клиента
+       ------------------------------------------------------------------ */
+    const isConfigured =
+      SUPABASE_URL && SUPABASE_KEY &&
+      SUPABASE_URL.indexOf('YOUR-PROJECT-ID') === -1 &&
+      SUPABASE_KEY.indexOf('YOUR-ANON-PUBLIC-KEY') === -1;
+
+    let sb = null;
+    if (isConfigured && window.supabase && typeof window.supabase.createClient === 'function') {
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
+    /* ------------------------------------------------------------------
+       Утилиты
+       ------------------------------------------------------------------ */
+    const $ = (id) => document.getElementById(id);
+
+    function el(tag, cls, text) {
+      const node = document.createElement(tag);
+      if (cls) node.className = cls;
+      if (text !== undefined && text !== null) node.textContent = text;
+      return node;
+    }
+
+    function shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+      }
+      return arr;
+    }
+
+    function errMsg(err) {
+      if (!err) return 'Неизвестная ошибка';
+      const msg = String(err.message || err);
+      if (err.code === '42P01' || /schema cache|does not exist|relation .*cards/i.test(msg)) {
+        return 'Таблица cards не найдена. Создайте её в Supabase (SQL из инструкции).';
+      }
+      if (/Failed to fetch|NetworkError|Load failed/i.test(msg)) {
+        return 'Нет соединения с Supabase. Проверьте интернет и SUPABASE_URL.';
+      }
+      if (/Invalid API key|JWT/i.test(msg)) {
+        return 'Неверный SUPABASE_KEY.';
+      }
+      return msg;
+    }
+
+    function toast(message, type) {
+      const node = el('div', 'toast' + (type ? ' ' + type : ''), message);
+      $('toasts').appendChild(node);
+      setTimeout(() => {
+        node.style.transition = 'opacity .25s ease';
+        node.style.opacity = '0';
+        setTimeout(() => node.remove(), 260);
+      }, 3400);
+    }
+
+    function setSync(status, text) {
+      const badge = $('sync');
+      badge.className = 'sync' + (status ? ' ' + status : '');
+      $('syncText').textContent = text;
+    }
+
+    function flagInvalid(input) {
+      input.classList.add('invalid');
+    }
+
+    /* ------------------------------------------------------------------
+       Слой данных: асинхронные запросы к таблице cards (Supabase)
+       Поля: id, word, translation, known
+       ------------------------------------------------------------------ */
+    const FIELDS = 'id, word, translation, known';
+
+    function client() {
+      if (!sb) {
+        throw new Error(isConfigured
+          ? 'Не удалось загрузить клиент Supabase (проверьте интернет).'
+          : 'Supabase не настроен: укажите SUPABASE_URL и SUPABASE_KEY.');
+      }
+      return sb;
+    }
+
+    function normalize(row) {
+      return {
+        id: row.id,
+        word: String(row.word == null ? '' : row.word),
+        translation: String(row.translation == null ? '' : row.translation),
+        known: !!row.known
+      };
+    }
+
+    const api = {
+      async list() {
+        const db = client();
+        const PAGE = 1000;
+        let from = 0;
+        let all = [];
+        for (;;) {
+          const { data, error } = await db
+            .from('cards')
+            .select(FIELDS)
+            .order('id', { ascending: false })
+            .range(from, from + PAGE - 1);
+          if (error) throw error;
+          const chunk = data || [];
+          all = all.concat(chunk);
+          if (chunk.length < PAGE) break;
+          from += PAGE;
+        }
+        return all.map(normalize);
+      },
+
+      async add(word, translation) {
+        const { data, error } = await client()
+          .from('cards')
+          .insert({ word: word, translation: translation, known: false })
+          .select(FIELDS)
+          .single();
+        if (error) throw error;
+        return normalize(data);
+      },
+
+      async update(id, word, translation) {
+        const { error } = await client()
+          .from('cards')
+          .update({ word: word, translation: translation })
+          .eq('id', id);
+        if (error) throw error;
+      },
+
+      async remove(ids) {
+        const db = client();
+        const SIZE = 200;
+        for (let i = 0; i < ids.length; i += SIZE) {
+          const part = ids.slice(i, i + SIZE);
+          const { error } = await db.from('cards').delete().in('id', part);
+          if (error) throw error;
+        }
+      },
+
+      async setKnown(id, known) {
+        const { error } = await client()
+          .from('cards')
+          .update({ known: !!known })
+          .eq('id', id);
+        if (error) throw error;
+      },
+
+      async resetProgress() {
+        const { error } = await client()
+          .from('cards')
+          .update({ known: false })
+          .eq('known', true);
+        if (error) throw error;
+      }
+    };
+
+    /* ------------------------------------------------------------------
+       Состояние
+       ------------------------------------------------------------------ */
+    const state = {
+      cards: [],
+      selected: new Set(),   // ключи — String(id)
+      query: '',
+      loading: true,
+      busy: false
+    };
+
+    const study = {
+      active: false,
+      session: [],
+      deck: [],
+      index: 0,
+      known: 0,
+      unknown: new Set(),
+      flipped: false
+    };
+
+    /* ------------------------------------------------------------------
+       Ссылки на элементы
+       ------------------------------------------------------------------ */
+    const homeEl = $('home');
+    const studyEl = $('study');
+    const listEl = $('list');
+    const inWord = $('inWord');
+    const inTrans = $('inTrans');
+    const searchEl = $('search');
+    const btnAdd = $('btnAdd');
+    const btnSelectAll = $('btnSelectAll');
+    const btnDeleteSel = $('btnDeleteSel');
+    const btnDeleteUnknown = $('btnDeleteUnknown');
+    const btnReset = $('btnReset');
+    const btnStart = $('btnStart');
+    const btnRefresh = $('btnRefresh');
+    const chkShuffle = $('chkShuffle');
+    const chkUnknown = $('chkUnknown');
+
+    const flipCard = $('flipCard');
+    const flipScene = $('flipScene');
+    const frontText = $('frontText');
+    const backText = $('backText');
+
+    /* ------------------------------------------------------------------
+       Главный экран: отрисовка
+       ------------------------------------------------------------------ */
+    function visibleCards() {
+      const q = state.query.trim().toLocaleLowerCase();
+      if (!q) return state.cards;
+      return state.cards.filter((c) =>
+        c.word.toLocaleLowerCase().indexOf(q) !== -1 ||
+        c.translation.toLocaleLowerCase().indexOf(q) !== -1
+      );
+    }
+
+    function renderStats() {
+      const total = state.cards.length;
+      const known = state.cards.filter((c) => c.known).length;
+      $('stats').textContent =
+        'Всего: ' + total + ' · Выучено: ' + known + ' · Осталось: ' + (total - known);
+    }
+
+    function renderList() {
+      listEl.textContent = '';
+
+      if (state.loading) {
+        listEl.appendChild(el('div', 'list-empty', 'Загрузка…'));
+        return;
+      }
+
+      const cards = visibleCards();
+      if (cards.length === 0) {
+        let text;
+        if (!sb) {
+          text = 'Нет подключения к Supabase.\nУкажите SUPABASE_URL и SUPABASE_KEY.';
+        } else if (state.cards.length === 0) {
+          text = 'Пока нет ни одной карточки.\nДобавьте первое слово выше.';
+        } else {
+          text = 'Ничего не найдено.';
+        }
+        listEl.appendChild(el('div', 'list-empty', text));
+        return;
+      }
+
+      const frag = document.createDocumentFragment();
+      cards.forEach((c) => {
+        const key = String(c.id);
+        const row = el('div', 'row' + (c.known ? ' known' : '') + (state.selected.has(key) ? ' selected' : ''));
+        row.dataset.id = key;
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', state.selected.has(key) ? 'true' : 'false');
+
+        const box = el('span', 'box');
+        const text = el('div', 'row-text');
+        text.appendChild(el('span', 'w', (c.known ? '✓  ' : '') + c.word));
+        text.appendChild(el('span', 'sep', '—'));
+        text.appendChild(el('span', 't', c.translation));
+
+        const edit = el('button', 'edit-btn', '✎');
+        edit.type = 'button';
+        edit.title = 'Изменить';
+        edit.setAttribute('aria-label', 'Изменить карточку');
+
+        row.appendChild(box);
+        row.appendChild(text);
+        row.appendChild(edit);
+        frag.appendChild(row);
+      });
+      listEl.appendChild(frag);
+    }
+
+    function renderToolbar() {
+      const total = state.cards.length;
+      const known = state.cards.filter((c) => c.known).length;
+      const selCount = state.selected.size;
+      const visible = visibleCards();
+      const allSelected = visible.length > 0 &&
+        visible.every((c) => state.selected.has(String(c.id)));
+      const busy = state.busy;
+
+      btnDeleteSel.textContent = selCount ? 'Удалить выбранные (' + selCount + ')' : 'Удалить выбранные';
+      btnDeleteSel.disabled = busy || selCount === 0;
+      btnDeleteUnknown.disabled = busy || (total - known) === 0;
+      btnReset.disabled = busy || known === 0;
+      btnSelectAll.textContent = allSelected ? 'Снять выделение' : 'Выбрать все';
+      btnSelectAll.disabled = busy || visible.length === 0;
+      btnStart.disabled = busy || total === 0;
+      btnAdd.disabled = busy;
+      btnRefresh.disabled = busy || !sb;
+    }
+
+    function renderAll() {
+      renderStats();
+      renderList();
+      renderToolbar();
+    }
+
+    /* ------------------------------------------------------------------
+       Загрузка и синхронизация
+       ------------------------------------------------------------------ */
+    async function loadCards(silent) {
+      if (!sb) {
+        state.loading = false;
+        setSync('err', isConfigured ? 'Клиент не загружен' : 'Не настроено');
+        renderAll();
+        return;
+      }
+      if (!silent) {
+        state.loading = true;
+        renderList();
+      }
+      setSync('busy', 'Синхронизация…');
+      try {
+        state.cards = await api.list();
+        const ids = new Set(state.cards.map((c) => String(c.id)));
+        Array.from(state.selected).forEach((k) => { if (!ids.has(k)) state.selected.delete(k); });
+        setSync('ok', 'Синхронизировано');
+      } catch (err) {
+        console.error(err);
+        setSync('err', 'Нет связи');
+        toast('Не удалось загрузить карточки: ' + errMsg(err), 'error');
+      } finally {
+        state.loading = false;
+        renderAll();
+      }
+    }
+
+    /* Выполнение операции с блокировкой кнопок и обработкой ошибок */
+    async function run(fn, okMessage) {
+      if (state.busy) return false;
+      state.busy = true;
+      renderToolbar();
+      setSync('busy', 'Синхронизация…');
+      try {
+        await fn();
+        setSync('ok', 'Синхронизировано');
+        if (okMessage) toast(okMessage, 'ok');
+        return true;
+      } catch (err) {
+        console.error(err);
+        setSync('err', 'Ошибка');
+        toast(errMsg(err), 'error');
+        return false;
+      } finally {
+        state.busy = false;
+        renderAll();
+      }
+    }
+
+    /* ------------------------------------------------------------------
+       Модальное окно (подтверждение / редактирование)
+       ------------------------------------------------------------------ */
+    let modalOpen = false;
+
+    function openModal(opts) {
+      return new Promise((resolve) => {
+        modalOpen = true;
+
+        const back = el('div', 'modal-backdrop');
+        const box = el('div', 'modal');
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-modal', 'true');
+        box.appendChild(el('h3', '', opts.title));
+        if (opts.text) box.appendChild(el('p', 'modal-text', opts.text));
+
+        const inputs = [];
+        (opts.fields || []).forEach((f) => {
+          const label = el('label', 'field');
+          label.appendChild(el('span', 'field-label', f.label));
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = f.value || '';
+          input.placeholder = f.label;
+          input.autocomplete = 'off';
+          input.maxLength = 500;
+          input.addEventListener('input', () => input.classList.remove('invalid'));
+          label.appendChild(input);
+          box.appendChild(label);
+          inputs.push(input);
+        });
+
+        const actions = el('div', 'modal-actions');
+        const cancel = el('button', '', 'Отмена');
+        cancel.type = 'button';
+        const ok = el('button', opts.danger ? 'danger' : 'primary', opts.confirmText || 'OK');
+        ok.type = 'button';
+        actions.appendChild(cancel);
+        actions.appendChild(ok);
+        box.appendChild(actions);
+        back.appendChild(box);
+        document.body.appendChild(back);
+
+        function close(result) {
+          document.removeEventListener('keydown', onKey, true);
+          back.remove();
+          modalOpen = false;
+          resolve(result);
+        }
+
+        function submit() {
+          if (inputs.length) {
+            const values = inputs.map((i) => i.value.trim());
+            const bad = values.findIndex((v) => !v);
+            if (bad !== -1) {
+              flagInvalid(inputs[bad]);
+              inputs[bad].focus();
+              return;
+            }
+            close(values);
+          } else {
+            close(true);
+          }
+        }
+
+        function onKey(e) {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            close(null);
+          } else if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT') {
+            e.preventDefault();
+            e.stopPropagation();
+            submit();
+          }
+        }
+
+        document.addEventListener('keydown', onKey, true);
+        cancel.addEventListener('click', () => close(null));
+        ok.addEventListener('click', submit);
+        back.addEventListener('mousedown', (e) => { if (e.target === back) close(null); });
+
+        if (inputs.length) {
+          inputs[0].focus();
+          inputs[0].select();
+        } else {
+          cancel.focus();
+        }
+      });
+    }
+
+    /* ------------------------------------------------------------------
+       Главный экран: действия
+       ------------------------------------------------------------------ */
+    async function addCard() {
+      const word = inWord.value.trim();
+      const translation = inTrans.value.trim();
+
+      if (!word) { flagInvalid(inWord); inWord.focus(); return; }
+      if (!translation) { flagInvalid(inTrans); inTrans.focus(); return; }
+
+      const ok = await run(async () => {
+        const card = await api.add(word, translation);
+        state.cards.unshift(card);
+      });
+
+      if (ok) {
+        inWord.value = '';
+        inTrans.value = '';
+        inWord.focus();
+        listEl.scrollTop = 0;
+      }
+    }
+
+    function findCard(key) {
+      return state.cards.find((c) => String(c.id) === key);
+    }
+
+    async function editCard(key) {
+      const card = findCard(key);
+      if (!card) return;
+
+      const result = await openModal({
+        title: 'Редактирование карточки',
+        fields: [
+          { label: 'Слово / Фраза', value: card.word },
+          { label: 'Перевод / Значение', value: card.translation }
+        ],
+        confirmText: 'Сохранить'
+      });
+      if (!result) return;
+
+      const newWord = result[0];
+      const newTrans = result[1];
+      if (newWord === card.word && newTrans === card.translation) return;
+
+      await run(async () => {
+        await api.update(card.id, newWord, newTrans);
+        card.word = newWord;
+        card.translation = newTrans;
+      }, 'Карточка сохранена');
+    }
+
+    async function deleteSelected() {
+      const keys = Array.from(state.selected);
+      const cards = state.cards.filter((c) => state.selected.has(String(c.id)));
+      if (cards.length === 0) return;
+
+      const text = cards.length === 1
+        ? 'Удалить карточку «' + cards[0].word + '»?'
+        : 'Удалить выбранные карточки (' + cards.length + ' шт.)?';
+
+      const ok = await openModal({ title: 'Удаление', text: text, confirmText: 'Удалить', danger: true });
+      if (!ok) return;
+
+      const ids = cards.map((c) => c.id);
+      const idSet = new Set(ids);
+      await run(async () => {
+        await api.remove(ids);
+        state.cards = state.cards.filter((c) => !idSet.has(c.id));
+        keys.forEach((k) => state.selected.delete(k));
+      }, 'Удалено: ' + ids.length);
+    }
+
+    async function deleteUnknown() {
+      const cards = state.cards.filter((c) => !c.known);
+      if (cards.length === 0) return;
+
+      const ok = await openModal({
+        title: 'Удаление невыученных',
+        text: 'Удалить все невыученные карточки (' + cards.length + ' шт.)? Выученные останутся.',
+        confirmText: 'Удалить',
+        danger: true
+      });
+      if (!ok) return;
+
+      const ids = cards.map((c) => c.id);
+      const idSet = new Set(ids);
+      await run(async () => {
+        await api.remove(ids);
+        state.cards = state.cards.filter((c) => !idSet.has(c.id));
+        ids.forEach((id) => state.selected.delete(String(id)));
+      }, 'Удалено: ' + ids.length);
+    }
+
+    async function resetProgress() {
+      const ok = await openModal({
+        title: 'Сброс прогресса',
+        text: 'Пометить все карточки как невыученные?',
+        confirmText: 'Сбросить'
+      });
+      if (!ok) return;
+
+      await run(async () => {
+        await api.resetProgress();
+        state.cards.forEach((c) => { c.known = false; });
+      }, 'Прогресс сброшен');
+    }
+
+    function toggleSelectAll() {
+      const visible = visibleCards();
+      const allSelected = visible.length > 0 &&
+        visible.every((c) => state.selected.has(String(c.id)));
+      visible.forEach((c) => {
+        const key = String(c.id);
+        if (allSelected) state.selected.delete(key); else state.selected.add(key);
+      });
+      renderList();
+      renderToolbar();
+    }
+
+    async function startStudy() {
+      if (state.busy) return;
+
+      btnStart.disabled = true;
+      await loadCards(true);   // подтягиваем актуальные данные с сервера
+      renderToolbar();
+
+      const total = state.cards.length;
+      if (total === 0) {
+        toast('Добавьте хотя бы одну карточку, чтобы начать обучение.');
+        return;
+      }
+
+      const onlyUnknown = chkUnknown.checked;
+      const cards = state.cards.filter((c) => !onlyUnknown || !c.known);
+      if (cards.length === 0) {
+        toast('Все карточки уже выучены. Снимите «Только невыученные» или сбросьте прогресс.');
+        return;
+      }
+
+      openStudy(cards, chkShuffle.checked);
+    }
+
+    /* ------------------------------------------------------------------
+       Экраны
+       ------------------------------------------------------------------ */
+    function showScreen(name) {
+      const isStudy = name === 'study';
+      study.active = isStudy;
+      homeEl.hidden = isStudy;
+      studyEl.hidden = !isStudy;
+      window.scrollTo(0, 0);
+    }
+
+    /* ------------------------------------------------------------------
+       Экран обучения
+       ------------------------------------------------------------------ */
+    function inCardMode() {
+      return study.active && !$('cardView').hidden && study.index < study.deck.length;
+    }
+
+    function openStudy(cards, shuffle) {
+      study.session = cards.map((c) => ({ id: c.id, word: c.word, translation: c.translation, known: c.known }));
+      study.deck = study.session.slice();
+      if (shuffle) shuffleArray(study.deck);
+      study.index = 0;
+      study.known = 0;
+      study.unknown = new Set();
+
+      $('cardView').hidden = false;
+      $('resultView').hidden = true;
+      $('btnShuffle').disabled = false;
+
+      showScreen('study');
+      showCurrent();
+    }
+
+    function fitText(box) {
+      const span = box.firstElementChild;
+      let size = window.innerWidth < 600 ? 34 : 48;
+      box.style.fontSize = size + 'px';
+      while (size > 13 && (span.offsetHeight > box.clientHeight || span.offsetWidth > box.clientWidth)) {
+        size -= 2;
+        box.style.fontSize = size + 'px';
+      }
+    }
+
+    function fitAll() {
+      if (!study.active || $('cardView').hidden) return;
+      fitText(frontText);
+      fitText(backText);
+    }
+
+    function setCardTexts(front, back) {
+      // Мгновенный сброс переворота без анимации, чтобы не «спойлерить» новое слово
+      flipCard.classList.add('no-anim');
+      flipCard.classList.remove('flipped');
+      study.flipped = false;
+
+      frontText.firstElementChild.textContent = front;
+      backText.firstElementChild.textContent = back;
+      fitAll();
+
+      void flipCard.offsetWidth;
+      flipCard.classList.remove('no-anim');
+
+      // Небольшая анимация появления новой карточки
+      flipScene.style.animation = 'none';
+      void flipScene.offsetWidth;
+      flipScene.style.animation = '';
+    }
+
+    function showCurrent() {
+      const total = study.deck.length;
+      $('pfill').style.width = (total ? Math.min(study.index / total, 1) * 100 : 0) + '%';
+
+      if (study.index >= total) {
+        showResults();
+        return;
+      }
+
+      const card = study.deck[study.index];
+      setCardTexts(card.word, card.translation);
+      $('progressLabel').textContent =
+        'Карточка ' + (study.index + 1) + ' из ' + total +
+        ' · Знаю: ' + study.known + ' · Не знаю: ' + study.unknown.size;
+    }
+
+    function showResults() {
+      const total = study.deck.length;
+      const unknown = study.unknown.size;
+
+      $('resultTitle').textContent = unknown === 0 ? 'Отличная работа! 🎉' : 'Сессия завершена';
+      $('resultSub').textContent = 'Знаю: ' + study.known + ' из ' + total + ' · Не знаю: ' + unknown;
+      $('progressLabel').textContent = 'Готово';
+      $('btnAgainUnknown').hidden = unknown === 0;
+      $('btnShuffle').disabled = true;
+      $('cardView').hidden = true;
+      $('resultView').hidden = false;
+    }
+
+    function flip() {
+      if (!inCardMode()) return;
+      study.flipped = !study.flipped;
+      flipCard.classList.toggle('flipped', study.flipped);
+    }
+
+    // Сохранение ответов идёт последовательно, чтобы порядок записей не терялся
+    let saveChain = Promise.resolve();
+    function persistKnown(id, known) {
+      saveChain = saveChain
+        .then(() => api.setKnown(id, known))
+        .then(() => setSync('ok', 'Синхронизировано'))
+        .catch((err) => {
+          console.error(err);
+          setSync('err', 'Ошибка');
+          toast('Не удалось сохранить ответ: ' + errMsg(err), 'error');
+        });
+    }
+
+    function answer(known) {
+      if (!inCardMode()) return;
+      const card = study.deck[study.index];
+      card.known = known;
+
+      const stored = state.cards.find((c) => c.id === card.id);
+      if (stored) stored.known = known;
+
+      if (known) {
+        study.known++;
+        study.unknown.delete(card.id);
+      } else {
+        study.unknown.add(card.id);
+      }
+
+      setSync('busy', 'Сохранение…');
+      persistKnown(card.id, known);
+
+      study.index++;
+      showCurrent();
+    }
+
+    function shuffleRemaining() {
+      if (!inCardMode()) return;
+      const rest = study.deck.slice(study.index);
+      shuffleArray(rest);
+      study.deck = study.deck.slice(0, study.index).concat(rest);
+      showCurrent();
+    }
+
+    function repeatAll() {
+      openStudy(study.session, true);
+    }
+
+    function repeatUnknown() {
+      const cards = study.session.filter((c) => study.unknown.has(c.id));
+      if (cards.length) openStudy(cards, true); else exitStudy();
+    }
+
+    function exitStudy() {
+      if (!study.active) return;
+      showScreen('home');
+      renderAll();
+    }
+
+    /* ------------------------------------------------------------------
+       События: главный экран
+       ------------------------------------------------------------------ */
+    btnAdd.addEventListener('click', addCard);
+    inWord.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); inTrans.focus(); }
+    });
+    inTrans.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); addCard(); }
+    });
+    [inWord, inTrans].forEach((i) => i.addEventListener('input', () => i.classList.remove('invalid')));
+
+    searchEl.addEventListener('input', () => {
+      state.query = searchEl.value;
+      renderList();
+      renderToolbar();
+    });
+
+    listEl.addEventListener('click', (e) => {
+      const row = e.target.closest('.row');
+      if (!row) return;
+      const key = row.dataset.id;
+
+      if (e.target.closest('.edit-btn')) {
+        editCard(key);
+        return;
+      }
+
+      if (state.selected.has(key)) state.selected.delete(key); else state.selected.add(key);
+      const sel = state.selected.has(key);
+      row.classList.toggle('selected', sel);
+      row.setAttribute('aria-selected', sel ? 'true' : 'false');
+      renderToolbar();
+    });
+
+    listEl.addEventListener('dblclick', (e) => {
+      const row = e.target.closest('.row');
+      if (row && !e.target.closest('.edit-btn')) editCard(row.dataset.id);
+    });
+
+    btnSelectAll.addEventListener('click', toggleSelectAll);
+    btnDeleteSel.addEventListener('click', deleteSelected);
+    btnDeleteUnknown.addEventListener('click', deleteUnknown);
+    btnReset.addEventListener('click', resetProgress);
+    btnStart.addEventListener('click', startStudy);
+    btnRefresh.addEventListener('click', () => loadCards(false));
+
+    /* ------------------------------------------------------------------
+       События: экран обучения
+       ------------------------------------------------------------------ */
+    function blurAfter(handler) {
+      return function (e) {
+        if (e.currentTarget && e.currentTarget.blur) e.currentTarget.blur();
+        handler();
+      };
+    }
+
+    flipScene.addEventListener('click', flip);
+    $('btnFlip').addEventListener('click', blurAfter(flip));
+    $('btnKnown').addEventListener('click', blurAfter(() => answer(true)));
+    $('btnUnknown').addEventListener('click', blurAfter(() => answer(false)));
+    $('btnShuffle').addEventListener('click', blurAfter(shuffleRemaining));
+    $('btnBack').addEventListener('click', blurAfter(exitStudy));
+    $('btnHome').addEventListener('click', blurAfter(exitStudy));
+    $('btnAgain').addEventListener('click', blurAfter(repeatAll));
+    $('btnAgainUnknown').addEventListener('click', blurAfter(repeatUnknown));
+
+    /* Горячие клавиши: Space, ←, →, S, Esc */
+    document.addEventListener('keydown', (e) => {
+      if (modalOpen || !study.active) return;
+      const tag = e.target && e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        if (!e.repeat) flip();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (!e.repeat) answer(false);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (!e.repeat) answer(true);
+      } else if (e.code === 'KeyS') {
+        e.preventDefault();
+        if (!e.repeat) shuffleRemaining();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        exitStudy();
+      }
+    });
+
+    // Не даём пробелу «нажать» кнопку, оставшуюся в фокусе
+    document.addEventListener('keyup', (e) => {
+      if (study.active && !modalOpen && (e.code === 'Space' || e.key === ' ')) {
+        const tag = e.target && e.target.tagName;
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA') e.preventDefault();
+      }
+    });
+
+    let resizeFrame = 0;
+    window.addEventListener('resize', () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(fitAll);
+    });
+
+    // Подтягиваем изменения с других устройств, когда вкладка снова активна
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !study.active && sb && !state.busy && !modalOpen) {
+        loadCards(true);
+      }
+    });
+
+    /* ------------------------------------------------------------------
+       PWA: иконки, манифест и service worker
+       ------------------------------------------------------------------ */
+    function makeIcon(size) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const g = canvas.getContext('2d');
+
+      const bg = g.createLinearGradient(0, 0, size, size);
+      bg.addColorStop(0, '#33407a');
+      bg.addColorStop(1, '#222b55');
+      g.fillStyle = bg;
+      g.fillRect(0, 0, size, size);
+
+      const w = size * 0.6;
+      const h = size * 0.44;
+      const x = (size - w) / 2;
+      const y = (size - h) / 2;
+      const r = size * 0.08;
+      g.beginPath();
+      g.moveTo(x + r, y);
+      g.arcTo(x + w, y, x + w, y + h, r);
+      g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r);
+      g.arcTo(x, y, x + w, y, r);
+      g.closePath();
+      g.fillStyle = 'rgba(255,255,255,0.14)';
+      g.fill();
+      g.lineWidth = Math.max(2, size * 0.012);
+      g.strokeStyle = 'rgba(255,255,255,0.35)';
+      g.stroke();
+
+      g.fillStyle = '#ffffff';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.font = '700 ' + Math.round(size * 0.26) + "px 'Segoe UI', system-ui, -apple-system, sans-serif";
+      g.fillText('Aa', size / 2, size / 2 + size * 0.01);
+      return canvas.toDataURL('image/png');
+    }
+
+    function setupPwa() {
+      try {
+        const apple = document.createElement('link');
+        apple.rel = 'apple-touch-icon';
+        apple.href = makeIcon(180);
+        document.head.appendChild(apple);
+
+        if (location.protocol === 'http:' || location.protocol === 'https:') {
+          const manifest = {
+            name: 'Карточки для изучения слов',
+            short_name: 'Карточки',
+            lang: 'ru',
+            start_url: location.href.split('#')[0],
+            scope: new URL('./', location.href).href,
+            display: 'standalone',
+            background_color: '#12141c',
+            theme_color: '#12141c',
+            icons: [
+              { src: makeIcon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+              { src: makeIcon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+            ]
+          };
+          const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+          const link = document.createElement('link');
+          link.rel = 'manifest';
+          link.href = URL.createObjectURL(blob);
+          document.head.appendChild(link);
+
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(() => { /* sw.js необязателен */ });
+          }
+        }
+      } catch (err) {
+        console.warn('PWA setup skipped:', err);
+      }
+    }
+
+    /* ------------------------------------------------------------------
+       Запуск
+       ------------------------------------------------------------------ */
+    $('configBanner').hidden = isConfigured && !!sb;
+    if (isConfigured && !sb) {
+      $('configBanner').textContent =
+        'Не удалось загрузить клиент Supabase с CDN. Проверьте подключение к интернету и обновите страницу.';
+      $('configBanner').hidden = false;
+    }
+    setSync('', isConfigured ? 'Подключение…' : 'Не настроено');
+    setupPwa();
+    renderAll();
+    loadCards(false);
+  })();
+</script>
+</body>
+</html>
